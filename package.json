@@ -1,16 +1,24 @@
 {
-  "name": "express-hello-world",
+  "name": "admin-dental-backend",
   "version": "1.0.0",
-  "description": "Express Hello World on Render",
+  "description": "API para sistema de citas dentales",
   "main": "app.js",
-  "repository": "https://github.com/render-examples/express-hello-world",
-  "author": "Render Developers",
-  "license": "MIT",
-  "private": false,
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "init-db": "node config/initDatabase.js"
   },
   "dependencies": {
-    "express": "^5.0.0"
+    "express": "^4.18.2",
+    "mysql2": "^3.6.0",
+    "sequelize": "^6.32.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "nodemailer": "^6.9.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
   }
 }

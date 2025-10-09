@@ -1,13 +1,11 @@
 import express from "express";
 const router = express.Router();
 
-// Define a route for the home page
-router.get('/colgate', (req, res) => {
-    res.send('Pancho pericles');
-});
-
+// Define una ruta para las paginas principales
 router.get('/oralB', (req, res) => {
-    res.send('Margarita Azucena');
+    res.send(
+        {name: 'Margarita Azucena'
+                });
 });
 
 export default router;
