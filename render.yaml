@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: dental-admin-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        fromDatabase:
+          name: dental-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: dental-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: dental-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: dental-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: dental-db
+          property: password
+
+databases:
+  - name: dental-db
+    plan: free
+    databaseName: dental_admin
+    user: dental_user

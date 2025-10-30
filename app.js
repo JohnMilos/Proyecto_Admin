@@ -2,71 +2,101 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+// Importar configuración de base de datos
+const { testConnection, syncDatabase } = require('./config/database');
+
+// Importar todos los modelos
+require('./models/User');
+require('./models/Appointment');
+require('./models/MedicalRecord');
+require('./models/Penalty');
+
 const app = express();
 const port = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+/**
+ * CONFIGURACIÓN DE MIDDLEWARES
+ */
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Importar rutas
-const authRoutes = require('./routes/auth');
-const appointmentRoutes = require('./routes/appointments');
-// Agregar más rutas según sea necesario
-
-// Usar rutas
-app.use('/api/auth', authRoutes);
-app.use('/api/appointments', appointmentRoutes);
-
-// Ruta de salud
-app.get('/api/health', (req, res) => {
-    res.json({
+/**
+ * RUTA DE HEALTH CHECK
+ */
+app.get('/health', (req, res) => {
+    res.status(200).json({
         success: true,
-        message: 'Servidor del Administrador Dental funcionando correctamente',
-        timestamp: new Date().toISOString()
+        message: 'API del Administrador Dental funcionando correctamente',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        version: '1.0.0'
     });
 });
 
-// Manejo de errores 404
-app.use('*', (req, res) => {
+/**
+ * IMPORTACIÓN Y CONFIGURACIÓN DE RUTAS
+ */
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/appointments', require('./routes/appointments'));
+
+/**
+ * MANEJO DE RUTAS NO ENCONTRADAS (404) - VERSIÓN SIMPLE
+ */
+app.use((req, res) => {
     res.status(404).json({
         success: false,
-        message: 'Ruta no encontrada'
+        message: 'Ruta no encontrada',
+        path: req.originalUrl,
+        method: req.method
     });
 });
 
-// Manejo global de errores
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor',
-        error: process.env.NODE_ENV === 'production' ? {} : err.message
-    });
-});
-
-// Inicializar base de datos
-const sequelize = require('./config/database');
-
+/**
+ * INICIALIZACIÓN DEL SERVIDOR
+ */
 const startServer = async () => {
     try {
-        await sequelize.authenticate();
-        console.log('Conexión a la base de datos establecida correctamente.');
+        console.log('Iniciando Administrador Dental API...');
+        console.log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
 
-        // Sincronizar modelos (en producción usar migraciones)
-        await sequelize.sync({ force: false });
-        console.log('Modelos sincronizados con la base de datos.');
+        // 1. Probar conexión a la base de datos
+        const dbConnected = await testConnection();
+        if (!dbConnected) {
+            throw new Error('No se pudo conectar a la base de datos');
+        }
 
-        app.listen(port, () => {
-            console.log(`Servidor corriendo exitosamente en http://localhost:${port}`);
+        // 2. Sincronizar modelos (solo en desarrollo)
+        if (process.env.NODE_ENV !== 'production') {
+            await syncDatabase(false);
+            console.log('Modo desarrollo: Modelos sincronizados');
+        }
+
+        // 3. Iniciar servidor Express
+        app.listen(port, '0.0.0.0', () => {
+            console.log(`Servidor corriendo exitosamente en puerto ${port}`);
+            console.log(`Health Check: http://localhost:${port}/health`);
+
+            // Solo mostrar en desarrollo
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`API Auth: http://localhost:${port}/api/auth`);
+                console.log(`API Appointments: http://localhost:${port}/api/appointments`);
+            }
         });
+
     } catch (error) {
-        console.error('Error al iniciar el servidor:', error);
+        console.error('Error crítico al iniciar el servidor:', error);
         process.exit(1);
     }
 };
 
+// Iniciar el servidor
 startServer();
 
 module.exports = app;
