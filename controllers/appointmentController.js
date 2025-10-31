@@ -38,7 +38,7 @@ const createAppointment = async (req, res) => {
         }
 
         // CONVERTIR Y VALIDAR FECHA
-        const appointmentDateTime = new Date(date);  // ← CAMBIA appointmentDate por date
+        const appointmentDateTime = new Date(date);  //
         if (isNaN(appointmentDateTime.getTime())) {
             return res.status(400).json({
                 success: false,
@@ -78,7 +78,7 @@ const createAppointment = async (req, res) => {
             folio: generateFolio(),
             patientId,
             dentistId,
-            date: appointmentDateTime,  // ← CAMBIA appointmentDate por date
+            date: appointmentDateTime,
             type: type || 'first_visit',
             notes,
             status: 'scheduled'
@@ -105,7 +105,7 @@ const createAppointment = async (req, res) => {
                 appointment: {
                     id: appointment.id,
                     folio: appointment.folio,
-                    date: appointment.date,  // ← CAMBIA appointmentDate por date
+                    date: appointment.date,
                     status: appointment.status,
                     type: appointment.type
                 }
