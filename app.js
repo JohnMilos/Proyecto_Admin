@@ -18,10 +18,10 @@ const port = process.env.PORT || 3001;
  * CONFIGURACIÓN DE MIDDLEWARES
  */
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 app.use(express.json({ limit: '10mb' }));
@@ -45,6 +45,7 @@ app.get('/health', (req, res) => {
  */
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/appointments', require('./routes/appointments'));
+app.use('/api/medical-records', require('./routes/medicalRecords'));
 
 /**
  * MANEJO DE RUTAS NO ENCONTRADAS (404) - VERSIÓN SIMPLE
