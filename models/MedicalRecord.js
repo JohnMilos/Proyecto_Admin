@@ -4,9 +4,6 @@ const User = require('./User');
 
 /**
  * Modelo de Expediente Médico
- *
- * Almacena la información médica de los pacientes
- * Puede estar relacionado con citas específicas
  */
 const MedicalRecord = sequelize.define('MedicalRecord', {
     id: {
@@ -52,23 +49,17 @@ const MedicalRecord = sequelize.define('MedicalRecord', {
 }, {
     tableName: 'medical_records',
     timestamps: true,
-    indexes: [
-        {
-            fields: ['patientId']
-        }
-    ],
     comment: 'Tabla de expedientes médicos de los pacientes'
 });
 
-// Asociación con User
+// ASOCIACIONES SIMPLIFICADAS
 MedicalRecord.belongsTo(User, {
-    as: 'patient',
     foreignKey: 'patientId'
 });
 
 User.hasMany(MedicalRecord, {
-    as: 'medicalRecords',
     foreignKey: 'patientId'
 });
 
+// VERIFICAR QUE TENGA module.exports
 module.exports = MedicalRecord;
