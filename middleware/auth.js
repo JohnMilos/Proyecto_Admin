@@ -48,7 +48,7 @@ const auth = async (req, res, next) => {
             });
         }
 
-        // ✅ CORREGIDO: Verificar que la cuenta del usuario esté activa (usa isActive)
+        // Verifica que la cuenta del usuario esté activa (usa isActive)
         if (!user.isActive) {
             return res.status(401).json({
                 success: false,
