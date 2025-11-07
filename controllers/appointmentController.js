@@ -201,6 +201,90 @@ const getAppointments = async (req, res) => {
     }
 };
 
+// CONSEGUIR las citas disponibles
+const getOccupiedSlots = async (req, res) => {
+    try {
+        const { startDate, endDate, dentistId } = req.query;
+        // Esto sirve para pruebas de validación en consola
+        console.log('Obteniendo horas ocupadas:', { startDate, endDate, dentistId });
+
+
+        // Construir el filtro WHERE
+        const where = {
+            status: {
+                [Op.in]: ['scheduled', 'confirmed'] // Solo citas activas
+            }
+        };
+
+        // Filtrar por dentista si se proporciona
+        if (dentistId) {
+            where.dentistId = parseInt(dentistId);
+        }
+
+
+
+        // Filtrar por rango de fechas si se proporciona
+        if (startDate && endDate) {
+            where.date = {
+                [Op.between]: [new Date(startDate), new Date(endDate)]
+            };
+        } else if (startDate) {
+            where.date = {
+                [Op.gte]: new Date(startDate)
+            };
+        } else if (endDate) {
+            where.date = {
+                [Op.lte]: new Date(endDate)
+            };
+        }
+
+        // Obtener las citas
+        const appointments = await Appointment.findAll({
+            where,
+            attributes: ['id', 'dentistId', 'date', 'status'], // Solo los campos necesarios
+            include: [
+                {
+                    model: User,
+                    as: 'dentist',
+                    attributes: ['id', 'name', 'specialty'] // Info del dentista
+                }
+            ],
+            order: [['date', 'ASC']] // Ordenar por fecha
+        });
+
+        // Formatear la respuesta
+        const occupiedSlots = appointments.map(appointment => ({
+            appointmentId: appointment.id,
+            dentistId: appointment.dentistId,
+            dentistName: appointment.dentist.name,
+            dentistSpecialty: appointment.dentist.specialty,
+            date: appointment.date,
+            status: appointment.status,
+            available: false // Siempre false porque son horas ocupadas
+        }));
+
+        console.log(`Encontradas ${occupiedSlots.length} horas ocupadas`);
+
+        res.json({
+            success: true,
+            data: {
+                occupiedSlots,
+                total: occupiedSlots.length,
+                message: occupiedSlots.length === 0 ?
+                    'No hay horas ocupadas en el rango seleccionado' :
+                    `${occupiedSlots.length} horas ocupadas encontradas`
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al obtener horas ocupadas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener horas ocupadas',
+            error: error.message
+        });
+    }
+};
 // CANCELAR CITA
 const cancelAppointment = async (req, res) => {
     try {
@@ -384,5 +468,6 @@ module.exports = {
     createAppointment,
     getAppointments,
     cancelAppointment,
-    rescheduleAppointment
+    rescheduleAppointment,
+    getOccupiedSlots,
 };

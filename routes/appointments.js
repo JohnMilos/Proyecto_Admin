@@ -6,7 +6,8 @@ const {
     createAppointment,
     getAppointments,
     cancelAppointment,
-    rescheduleAppointment
+    rescheduleAppointment,
+    getOccupiedSlots
 } = require('../controllers/appointmentController');
 
 // Importar middlewares
@@ -77,6 +78,21 @@ router.patch('/:id/cancel', auth, cancelAppointment);
  * - newAppointmentDate: Nueva fecha y hora para la cita
  */
 router.patch('/:id/reschedule', auth, authorize('patient'), rescheduleAppointment);
+
+// ... rutas existentes ...
+
+/**
+ * GET /api/appointments/occupied-slots
+ * Obtener horas ocupadas de los dentistas para ver disponibilidad
+ *
+ * Query params opcionales:
+ * - startDate: Fecha inicial del rango (YYYY-MM-DD)
+ * - endDate: Fecha final del rango (YYYY-MM-DD)
+ * - dentistId: ID específico de un dentista
+ *
+ * Respuesta: Lista de horas ocupadas con info del dentista y cita
+ */
+router.get('/occupied-slots', auth, getOccupiedSlots);
 
 // Exportar el router
 module.exports = router;
