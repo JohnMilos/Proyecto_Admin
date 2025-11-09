@@ -464,10 +464,73 @@ const rescheduleAppointment = async (req, res) => {
     }
 };
 
+/**
+ * MARCAR CITA COMO COMPLETADA (solo dentistas y admin)
+ */
+const completeAppointment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { notes, treatment } = req.body; // Opcional: notas del tratamiento
+
+        const appointment = await Appointment.findByPk(id, {
+            include: [
+                { model: User, as: 'patient' },
+                { model: User, as: 'dentist' }
+            ]
+        });
+
+        if (!appointment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Cita no encontrada'
+            });
+        }
+
+        // Verificar permisos (solo el dentista asignado o admin)
+        if (req.user.role === 'dentist' && appointment.dentistId !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: 'No tiene permisos para completar esta cita'
+            });
+        }
+
+        // Verificar que la cita esté en estado scheduled
+        if (appointment.status !== 'scheduled') {
+            return res.status(400).json({
+                success: false,
+                message: `No se puede completar una cita con estado: ${appointment.status}`
+            });
+        }
+
+        // Actualizar a completed
+        await appointment.update({
+            status: 'completed',
+            notes: notes || appointment.notes // Mantener notas existentes o agregar nuevas
+        });
+
+        console.log('Cita marcada como completada:', appointment.id);
+
+        res.json({
+            success: true,
+            message: 'Cita marcada como completada exitosamente',
+            data: { appointment }
+        });
+
+    } catch (error) {
+        console.error('Error al completar cita:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al completar cita',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     createAppointment,
     getAppointments,
     cancelAppointment,
     rescheduleAppointment,
     getOccupiedSlots,
+    completeAppointment
 };

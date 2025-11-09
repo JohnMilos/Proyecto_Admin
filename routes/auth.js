@@ -8,11 +8,13 @@ const {
     register,
     login,
     getProfile,
-    getActiveDentists
+    getActiveDentists,
+    deleteUser,
+    deactivateUser
 } = require('../controllers/authController');
 
 // Importar middlewares
-const { auth } = require('../middleware/auth');
+const { auth, authorize } = require('../middleware/auth');
 const { validateUserRegistration } = require('../middleware/validation');
 
 /**
@@ -73,6 +75,10 @@ router.get('/profile', auth, getProfile);
 
 //Sin documentar paps
 router.get('/active-dentists', getActiveDentists);
+
+router.delete('/user/:userId', auth, authorize('admin'), deleteUser);
+
+router.patch('/user/:userId/deactivate', auth, authorize('admin'), deactivateUser);
 
 
 // Exportar el router

@@ -317,9 +317,140 @@ const getActiveDentists = async (req, res) => {
     }
 };
 
+/**
+ * elimina al usuario (solo admin) de la base de datos
+ *
+ */
+/**
+ * DESACTIVAR USUARIO (solo admin)
+ * En lugar de eliminar, cambia isActive a false
+ */
+const deleteUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        console.log('Desactivando usuario ID:', userId);
+
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Solo administradores pueden desactivar usuarios'
+            });
+        }
+
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+
+        if (user.id === req.user.id) {
+            return res.status(400).json({
+                success: false,
+                message: 'No puedes desactivar tu propia cuenta'
+            });
+        }
+
+        // SOLO ESTA LÍNEA ES IMPORTANTE
+        await user.update({ isActive: false });
+
+        res.json({
+            success: true,
+            message: 'Usuario desactivado exitosamente',
+            data: {
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    isActive: false
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al desactivar usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al desactivar usuario',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * desactivar a un usuario (solo ADMIN)
+ */
+const deactivateUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { isActive } = req.body;
+
+        console.log('Actualizando estado de usuario ID:', userId, 'nuevo estado:', isActive);
+
+        // Verificar que es admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Solo administradores pueden cambiar estados de usuarios'
+            });
+        }
+
+        // Buscar el usuario
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+
+        // No permitir que un admin se desactive a sí mismo
+        if (user.id === req.user.id && isActive === false) {
+            return res.status(400).json({
+                success: false,
+                message: 'No puedes desactivar tu propia cuenta'
+            });
+        }
+
+        // Actualizar el estado
+        await user.update({ isActive });
+
+        console.log('Estado de usuario actualizado:', userId, 'isActive:', isActive);
+
+        res.json({
+            success: true,
+            message: `Usuario ${isActive ? 'activado' : 'desactivado'} exitosamente`,
+            data: {
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    isActive: user.isActive
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al cambiar estado del usuario:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cambiar estado del usuario',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     register,
     login,
     getProfile,
-    getActiveDentists
+    getActiveDentists,
+    deleteUser,
+    deactivateUser
 };

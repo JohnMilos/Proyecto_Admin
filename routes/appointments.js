@@ -7,7 +7,8 @@ const {
     getAppointments,
     cancelAppointment,
     rescheduleAppointment,
-    getOccupiedSlots
+    getOccupiedSlots,
+    completeAppointment
 } = require('../controllers/appointmentController');
 
 // Importar middlewares
@@ -93,6 +94,8 @@ router.patch('/:id/reschedule', auth, authorize('patient'), rescheduleAppointmen
  * Respuesta: Lista de horas ocupadas con info del dentista y cita
  */
 router.get('/occupied-slots', auth, getOccupiedSlots);
+
+router.patch('/:id/complete', auth, authorize('dentist', 'admin'), completeAppointment);
 
 // Exportar el router
 module.exports = router;
