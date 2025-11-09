@@ -1,5 +1,9 @@
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 const User = require('../models/User');
+const Appointment = require('../models/Appointment');
+const MedicalRecord = require('../models/MedicalRecord');
+const Penalty = require('../models/Penalty');
 
 /**
  * Genera un token JWT para autenticación
@@ -329,12 +333,13 @@ const deleteUser = async (req, res) => {
     try {
         const { userId } = req.params;
 
-        console.log('Desactivando usuario ID:', userId);
+        console.log('Eliminando usuario ID:', userId);
 
+        // Verificación redundante: la ruta ya exige admin, pero mantenemos la defensa
         if (req.user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
-                message: 'Solo administradores pueden desactivar usuarios'
+                message: 'Solo administradores pueden eliminar usuarios'
             });
         }
 
@@ -347,35 +352,39 @@ const deleteUser = async (req, res) => {
             });
         }
 
+        // Evitar que un admin se elimine a sí mismo
         if (user.id === req.user.id) {
             return res.status(400).json({
                 success: false,
-                message: 'No puedes desactivar tu propia cuenta'
+                message: 'No puedes eliminar tu propia cuenta'
             });
         }
 
-        // SOLO ESTA LÍNEA ES IMPORTANTE
-        await user.update({ isActive: false });
+        // Eliminar entidades relacionadas para evitar conflictos de FK
+        await Penalty.destroy({ where: { userId: user.id } });
+        await MedicalRecord.destroy({ where: { patientId: user.id } });
+        await Appointment.destroy({ where: { [Op.or]: [{ patientId: user.id }, { dentistId: user.id }] } });
+
+        const deletedInfo = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+        };
+
+        await user.destroy();
 
         res.json({
             success: true,
-            message: 'Usuario desactivado exitosamente',
-            data: {
-                user: {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    isActive: false
-                }
-            }
+            message: 'Usuario eliminado exitosamente',
+            data: { user: deletedInfo }
         });
 
     } catch (error) {
-        console.error('Error al desactivar usuario:', error);
+        console.error('Error al eliminar usuario:', error);
         res.status(500).json({
             success: false,
-            message: 'Error al desactivar usuario',
+            message: 'Error al eliminar usuario',
             error: error.message
         });
     }
@@ -446,11 +455,42 @@ const deactivateUser = async (req, res) => {
     }
 };
 
+/**
+ * Obtener todos los usuarios (solo ADMIN)
+ * GET /api/auth/users
+ */
+const getAllUsers = async (req, res) => {
+    try {
+        console.log('Obteniendo todos los usuarios...');
+
+        const users = await User.findAll({
+            attributes: ['id', 'name', 'email', 'phone', 'role', 'isActive'],
+            order: [['name', 'ASC']]
+        });
+
+        res.json({
+            success: true,
+            data: {
+                users,
+                total: users.length
+            }
+        });
+    } catch (error) {
+        console.error('Error al obtener usuarios:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener usuarios',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     register,
     login,
     getProfile,
     getActiveDentists,
     deleteUser,
-    deactivateUser
+    deactivateUser,
+    getAllUsers
 };

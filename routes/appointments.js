@@ -95,6 +95,19 @@ router.patch('/:id/reschedule', auth, authorize('patient'), rescheduleAppointmen
  */
 router.get('/occupied-slots', auth, getOccupiedSlots);
 
+/**
+ * PATCH /api/appointments/:id/complete
+ * Marcar una cita como completada
+ *
+ * Permisos:
+ * - Dentistas: pueden completar sus citas
+ * - Admin: pueden completar cualquier cita
+ *
+ * Params URL:
+ * - id: ID de la cita
+ *
+ * Respuesta: { success, message, data: { appointment } }
+ */
 router.patch('/:id/complete', auth, authorize('dentist', 'admin'), completeAppointment);
 
 // Exportar el router

@@ -10,7 +10,8 @@ const {
     getProfile,
     getActiveDentists,
     deleteUser,
-    deactivateUser
+    deactivateUser,
+    getAllUsers
 } = require('../controllers/authController');
 
 // Importar middlewares
@@ -73,11 +74,50 @@ router.post('/login', login);
 router.get('/profile', auth, getProfile);
 
 
-//Sin documentar paps
+/**
+ * GET /api/auth/active-dentists
+ * Listar dentistas activos ordenados por nombre
+ *
+ * Permisos: Publico
+ *
+ * Respuesta: { success, data: { dentists: [], total, message } }
+ */
 router.get('/active-dentists', getActiveDentists);
 
+/**
+ * GET /api/auth/users
+ * Listar todos los usuarios
+ *
+ * Permisos: Solo ADMIN
+ *
+ * Respuesta: { success, data: { users: [], total } }
+ */
+router.get('/users', auth, authorize('admin'), getAllUsers);
+
+/**
+ * DELETE /api/auth/user/:userId
+ * Eliminar un usuario definitivamente
+ *
+ * Permisos: Solo ADMIN
+ * Params URL:
+ * - userId: ID del usuario a eliminar
+ *
+ * Respuesta: { success, message, data: { user: { id, name, email, role } } }
+ */
 router.delete('/user/:userId', auth, authorize('admin'), deleteUser);
 
+/**
+ * PATCH /api/auth/user/:userId/deactivate
+ * Activar/desactivar un usuario (cambio de isActive)
+ *
+ * Permisos: Solo ADMIN
+ * Params URL:
+ * - userId: ID del usuario
+ * Body:
+ * - isActive: boolean
+ *
+ * Respuesta: { success, message, data: { user: { id, name, email, role, isActive } } }
+ */
 router.patch('/user/:userId/deactivate', auth, authorize('admin'), deactivateUser);
 
 
