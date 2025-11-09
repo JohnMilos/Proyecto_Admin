@@ -89,6 +89,8 @@ router.get('/active-dentists', getActiveDentists);
  * Listar todos los usuarios
  *
  * Permisos: Solo ADMIN
+ * Query opcional:
+ * - q: Búsqueda por id (exacto si numérico), nombre o email (LIKE)
  *
  * Respuesta: { success, data: { users: [], total } }
  */

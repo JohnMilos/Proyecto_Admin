@@ -457,13 +457,29 @@ const deactivateUser = async (req, res) => {
 
 /**
  * Obtener todos los usuarios (solo ADMIN)
- * GET /api/auth/users
+ * GET /api/auth/users?q=texto
+ * Param opcional: q -> busca por id (exacto si numérico), name o email (LIKE)
  */
 const getAllUsers = async (req, res) => {
     try {
-        console.log('Obteniendo todos los usuarios...');
+        const q = (req.query.q || '').toString().trim();
+        console.log('Obteniendo usuarios. Filtro q =', q);
+
+        const where = {};
+        if (q) {
+            const or = [
+                { name: { [Op.like]: `%${q}%` } },
+                { email: { [Op.like]: `%${q}%` } }
+            ];
+            const asNumber = Number(q);
+            if (!Number.isNaN(asNumber)) {
+                or.push({ id: asNumber });
+            }
+            where[Op.or] = or;
+        }
 
         const users = await User.findAll({
+            where,
             attributes: ['id', 'name', 'email', 'phone', 'role', 'isActive'],
             order: [['name', 'ASC']]
         });
