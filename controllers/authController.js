@@ -277,8 +277,49 @@ const getProfile = async (req, res) => {
     }
 };
 
+/**
+ * Obtener todos los dentistas activos
+ * Para que los pacientes vean solo dentistas disponibles
+ */
+const getActiveDentists = async (req, res) => {
+    try {
+        console.log('Obteniendo dentistas activos...');
+
+        const activeDentists = await User.findAll({
+            where: {
+                role: 'dentist',
+                isActive: true
+            },
+            attributes: ['id', 'name', 'email', 'phone', 'specialty', 'isActive'],
+            order: [['name', 'ASC']]
+        });
+
+        console.log(`Encontrados ${activeDentists.length} dentistas activos`);
+
+        res.json({
+            success: true,
+            data: {
+                dentists: activeDentists,
+                total: activeDentists.length,
+                message: activeDentists.length === 0 ?
+                    'No hay dentistas activos en este momento' :
+                    `${activeDentists.length} dentistas activos encontrados`
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al obtener dentistas activos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener dentistas activos',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     register,
     login,
-    getProfile
+    getProfile,
+    getActiveDentists
 };

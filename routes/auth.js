@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
+
+
 // Importar controladores
 const {
     register,
     login,
-    getProfile
+    getProfile,
+    getActiveDentists
 } = require('../controllers/authController');
 
 // Importar middlewares
@@ -66,6 +69,11 @@ router.post('/login', login);
  * Respuesta: Datos del usuario (sin contraseña)
  */
 router.get('/profile', auth, getProfile);
+
+
+//Sin documentar paps
+router.get('/active-dentists', getActiveDentists);
+
 
 // Exportar el router
 module.exports = router;
