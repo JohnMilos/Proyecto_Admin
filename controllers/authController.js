@@ -37,8 +37,8 @@ const validateRegistrationData = async (data) => {
     }
 
     // Validar longitud del nombre (6-25 caracteres como en los requisitos)
-    if (name && (name.length < 6 || name.length > 25)) {
-        errors.push('El nombre debe tener entre 6 y 25 caracteres');
+    if (name && (name.length < 6 || name.length > 100)) {
+        errors.push('El nombre debe tener entre 6 y 100 caracteres');
     }
 
     // Validar formato de teléfono (mínimo 10 dígitos)

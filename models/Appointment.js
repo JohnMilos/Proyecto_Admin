@@ -18,7 +18,7 @@ const Appointment = sequelize.define('Appointment', {
         },
         comment: 'ID del usuario paciente'
     },
-    dentistId: {  // ← CAMBIA doctorId por dentistId
+    dentistId: {  
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
@@ -61,8 +61,8 @@ Appointment.belongsTo(User, {
 });
 
 Appointment.belongsTo(User, {
-    as: 'dentist',  // ← CAMBIA doctor por dentist
-    foreignKey: 'dentistId'  // ← CAMBIA doctorId por dentistId
+    as: 'dentist',  
+    foreignKey: 'dentistId'  
 });
 
 User.hasMany(Appointment, {
@@ -71,8 +71,8 @@ User.hasMany(Appointment, {
 });
 
 User.hasMany(Appointment, {
-    as: 'dentistAppointments',  // ← CAMBIA doctorAppointments por dentistAppointments
-    foreignKey: 'dentistId'  // ← CAMBIA doctorId por dentistId
+    as: 'dentistAppointments',  
+    foreignKey: 'dentistId'  
 });
 
 module.exports = Appointment;
