@@ -33,8 +33,8 @@ const validateUserRegistration = [
     body('name')
         .notEmpty()
         .withMessage('El nombre es requerido')
-        .isLength({ min: 6, max: 25 })
-        .withMessage('El nombre debe tener entre 6 y 25 caracteres')
+        .isLength({ min: 6, max: 100 })
+        .withMessage('El nombre debe tener entre 6 y 100 caracteres')
         .trim()
         .escape(),
 
