@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+﻿const { Op } = require('sequelize');
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const Penalty = require('../models/Penalty');
@@ -56,8 +56,11 @@ const createAppointment = async (req, res) => {
         const existingAppointment = await Appointment.findOne({
             where: {
                 dentistId,
-                date: {  // ← CAMBIA appointmentDate por date
-                    [Op.between]: [startTime, endTime]
+                date: {
+                                        [Op.and]: [
+                        { [Op.gt]: startTime },
+                        { [Op.lt]: endTime }
+                    ]
                 },
                 status: {
                     [Op.in]: ['scheduled', 'confirmed']
@@ -418,7 +421,10 @@ const rescheduleAppointment = async (req, res) => {
             where: {
                 dentistId: appointment.dentistId,
                 date: {  // ← CAMBIO: appointmentDate por date
-                    [Op.between]: [startTime, endTime]
+                                        [Op.and]: [
+                        { [Op.gt]: startTime },
+                        { [Op.lt]: endTime }
+                    ]
                 },
                 status: {
                     [Op.in]: ['scheduled', 'confirmed']
@@ -534,3 +540,4 @@ module.exports = {
     getOccupiedSlots,
     completeAppointment
 };
+
