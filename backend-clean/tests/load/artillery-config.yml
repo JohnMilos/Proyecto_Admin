@@ -1,0 +1,105 @@
+config:
+  target: "http://localhost:3001"
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      name: "Fase 1 - Calentamiento"
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 50
+      name: "Fase 2 - Carga progresiva"
+    - duration: 30
+      arrivalRate: 50
+      name: "Fase 3 - Carga máxima"
+  plugins:
+    expect: {}
+  processor: "./artillery-processor.js"
+
+scenarios:
+  # Escenario 1: Obtener dentistas activos (endpoint público)
+  - name: "Obtener dentistas activos"
+    flow:
+      - get:
+          url: "/api/auth/active-dentists"
+          expect:
+            - statusCode: 200
+
+  # Escenario 2: Registro de nuevo usuario
+  - name: "Registro de usuario"
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            name: "Test User {{ $randomNumber() }}"
+            email: "test{{ $randomNumber() }}@example.com"
+            phone: "555{{ $randomNumber() }}"
+            password: "Admin123!"
+            role: "patient"
+          expect:
+            - statusCode: 201
+          capture:
+            - json: "$.data.user.id"
+              as: "userId"
+            - json: "$.data.token"
+              as: "token"
+
+  # Escenario 3: Login y obtener perfil
+  - name: "Login y perfil"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "paciente@test.com"
+            password: "Admin123!"
+          expect:
+            - statusCode: 200
+          capture:
+            - json: "$.data.token"
+              as: "token"
+      - get:
+          url: "/api/auth/profile"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+  # Escenario 4: Obtener horarios ocupados
+  - name: "Consultar horarios ocupados"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "paciente@test.com"
+            password: "Admin123!"
+          capture:
+            - json: "$.data.token"
+              as: "token"
+      - get:
+          url: "/api/appointments/occupied-slots?startDate=2025-12-01&endDate=2025-12-31&dentistId=2"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          expect:
+            - statusCode: 200
+
+  # Escenario 5: Crear cita (requiere login)
+  - name: "Crear cita"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "paciente@test.com"
+            password: "Admin123!"
+          capture:
+            - json: "$.data.token"
+              as: "token"
+      - post:
+          url: "/api/appointments"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            dentistId: 2
+            date: "2026-06-15T10:00:00.000Z"
+            type: "first_visit"
+            notes: "Cita de prueba carga"
+          expect:
+            - statusCode: 201

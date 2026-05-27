@@ -7,7 +7,9 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "sync-db": "node scripts/syncDB.js",
-    "test": "jest --coverage --passWithNoTests"
+    "test": "jest --coverage --passWithNoTests",
+    "test:load": "artillery run tests/load/artillery-config.yml",
+    "test:load:report": "artillery run --output tests/load/report.json tests/load/artillery-config.yml && artillery report tests/load/report.json"
   },
   "keywords": [
     "dental",
@@ -33,6 +35,7 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "artillery": "^2.0.32",
     "jest": "^30.4.2",
     "supertest": "^7.2.2"
   }

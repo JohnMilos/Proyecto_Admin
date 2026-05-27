@@ -1,0 +1,77 @@
+config:
+  target: "http://localhost:3001"
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      name: "Calentamiento"
+    - duration: 60
+      arrivalRate: 20
+      name: "Carga normal"
+    - duration: 30
+      arrivalRate: 50
+      name: "Pico de carga"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Flujo completo: registro, login y citas"
+    weight: 70
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            name: "Usuario Test {{ $randomString() }}"
+            email: "test_{{ $randomString() }}@example.com"
+            phone: "5512345678"
+            password: "Admin123!"
+            role: "patient"
+          capture:
+            - json: "$.data.user.email"
+              as: "userEmail"
+
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "patient@dental.com"
+            password: "Admin123!"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+
+      - get:
+          url: "/api/auth/profile"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+      - get:
+          url: "/api/appointments"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+
+      - post:
+          url: "/api/appointments"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            dentistId: 2
+            date: "2026-08-15T10:00:00.000Z"
+            type: "checkup"
+            notes: "Cita de prueba Artillery"
+
+  - name: "Health check y dentistas"
+    weight: 20
+    flow:
+      - get:
+          url: "/health"
+      - get:
+          url: "/api/auth/active-dentists"
+
+  - name: "Solo login"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "patient@dental.com"
+            password: "Admin123!"

@@ -1,0 +1,61 @@
+config:
+  target: "http://localhost:3001"
+  phases:
+    - duration: 60
+      arrivalRate: 20
+      rampTo: 100
+      name: "Prueba de estrés"
+  plugins:
+    expect: {}
+
+  variables:
+    emails:
+      - "paciente@test.com"
+      - "dentista@test.com"
+      - "admin@test.com"
+    passwords:
+      - "Admin123!"
+
+scenarios:
+  # Escenario: Login, ver citas, crear cita, cancelar cita
+  - name: "Flujo completo paciente"
+    flow:
+      - loop:
+          - post:
+              url: "/api/auth/login"
+              json:
+                email: "{{ $randomElement(emails) }}"
+                password: "{{ $randomElement(passwords) }}"
+              capture:
+                - json: "$.data.token"
+                  as: "token"
+          - get:
+              url: "/api/appointments"
+              headers:
+                Authorization: "Bearer {{ token }}"
+          - get:
+              url: "/api/auth/active-dentists"
+          - get:
+              url: "/api/appointments/occupied-slots?startDate=2025-12-01&endDate=2025-12-31"
+              headers:
+                Authorization: "Bearer {{ token }}"
+        count: 5
+
+      # Crear cita
+      - post:
+          url: "/api/appointments"
+          headers:
+            Authorization: "Bearer {{ token }}"
+          json:
+            dentistId: 2
+            date: "2026-07-20T11:00:00.000Z"
+            type: "first_visit"
+          capture:
+            - json: "$.data.appointment.id"
+              as: "appointmentId"
+
+      # Cancelar cita
+      - patch:
+          url: "/api/appointments/{{ appointmentId }}/cancel"
+          headers:
+            Authorization: "Bearer {{ token }}"

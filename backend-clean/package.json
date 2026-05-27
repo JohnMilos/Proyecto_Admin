@@ -29,6 +29,7 @@
     "sequelize": "^6.35.0"
   },
   "devDependencies": {
+    "artillery": "^2.0.32",
     "jest": "^30.4.2",
     "jest-junit": "^17.0.0",
     "nodemon": "^3.0.1",

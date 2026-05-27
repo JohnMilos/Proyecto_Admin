@@ -1,44 +1,37 @@
-version: '3.8'
-
 services:
   mysql:
     image: mysql:8.0
     container_name: dental_mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD:
+      MYSQL_DATABASE: dental_admin
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./dental_admin.sql:/docker-entrypoint-initdb.d/1.sql
     networks:
       - dental_network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
 
   backend:
-    build: ./backend-clean
+    build:
+      context: ./backend-clean
+      dockerfile: Dockerfile
     container_name: dental_backend
     restart: always
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
-      PORT: ${PORT:-3001}
+      NODE_ENV: development
+      PORT: 3001
       DB_HOST: mysql
-      DB_NAME: ${DB_NAME:-dental_admin}
-      DB_USER: ${DB_USER:-root}
-      DB_PASSWORD: ${DB_PASSWORD:-}
-      JWT_SECRET: ${JWT_SECRET:-dental_secret}
+      DB_NAME: dental_admin
+      DB_USER: root
+      DB_PASSWORD:
+      JWT_SECRET: tu_jwt_secret_muy_seguro
     ports:
       - "3001:3001"
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
     networks:
       - dental_network
 
